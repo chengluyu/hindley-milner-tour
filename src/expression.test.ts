@@ -2,6 +2,7 @@ import * as E from './expression';
 import * as T from './type';
 import { Map } from 'immutable';
 import Annotator from './annotator';
+import Collector from './constraint';
 
 function typed<T extends E.Value>(
   check: (x: E.Value) => x is T,
@@ -40,6 +41,9 @@ const typeEnv: { [name: string]: T.Type } = {
 function test(e: E.Expression): void {
   const a = new Annotator(Map(typeEnv));
   a.visit(e);
+  const c = new Collector(a);
+  c.visit(e);
+  c.display();
   console.log('>', e.toString(a)); // pretty print the expression
   console.log(e.evaluate(Map(env))); // should be 'correct'
 }

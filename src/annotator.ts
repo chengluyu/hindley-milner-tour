@@ -18,6 +18,14 @@ export default class Annotator extends E.ExpressionVisitor<T.Type, [Environment]
     return this.exprTypeVarMap.get(x)?.toString() ?? '?';
   }
 
+  public getType(x: E.Expression): T.Type {
+    const type = this.exprTypeVarMap.get(x);
+    if (type === undefined) {
+      throw new Error('no type information of the given expression');
+    }
+    return type;
+  }
+
   private tick(): number {
     return this.variableCounter++;
   }
@@ -32,12 +40,8 @@ export default class Annotator extends E.ExpressionVisitor<T.Type, [Environment]
     return new T.TypeVariable(this.tick());
   }
 
-  public visitVariable(x: E.Variable, env: Environment): T.Type {
-    const typeVariable = env.get(x.name);
-    if (typeVariable === undefined) {
-      throw new Error(`unbound variable "${x.name}"`);
-    }
-    return typeVariable;
+  public visitVariable(/* x: E.Variable, env: Environment */): T.Type {
+    return new T.TypeVariable(this.tick());
   }
 
   public visitAbstraction(x: E.Abstraction, env: Environment): T.Type {
