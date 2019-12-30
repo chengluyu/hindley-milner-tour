@@ -26,6 +26,7 @@ export abstract class Expression {
     visitor: ExpressionVisitor<R, Args>,
     ...args: Args
   ): R;
+  public abstract toString(): string;
 }
 
 export class Literal extends Expression {
@@ -42,6 +43,10 @@ export class Literal extends Expression {
     ...args: A
   ): R {
     return visitor.visitLiteral(this, ...args);
+  }
+
+  public toString(): string {
+    return JSON.stringify(this.value);
   }
 }
 
@@ -64,6 +69,10 @@ export class Variable extends Expression {
   ): R {
     return visitor.visitVariable(this, ...args);
   }
+
+  public toString(): string {
+    return this.name;
+  }
 }
 
 export class Abstraction extends Expression {
@@ -80,6 +89,10 @@ export class Abstraction extends Expression {
     ...args: A
   ): R {
     return visitor.visitAbstraction(this, ...args);
+  }
+
+  public toString(): string {
+    return `λ${this.parameter.name}.${this.body.toString()}`;
   }
 }
 
@@ -101,6 +114,10 @@ export class Application extends Expression {
     ...args: A
   ): R {
     return visitor.visitApplication(this, ...args);
+  }
+
+  public toString(): string {
+    return `${this.callee.toString()} ${this.argument.toString()}`;
   }
 }
 
@@ -125,6 +142,10 @@ export class Condition extends Expression {
   ): R {
     return visitor.visitCondition(this, ...args);
   }
+
+  public toString(): string {
+    return `if ${this.condition.toString()} then ${this.consequence.toString()} else ${this.alternative.toString()}`;
+  }
 }
 
 export class Let extends Expression {
@@ -145,6 +166,10 @@ export class Let extends Expression {
     ...args: A
   ): R {
     return visitor.visitLet(this, ...args);
+  }
+
+  public toString(): string {
+    return `let ${this.name.name} = ${this.value.toString()} in ${this.body.toString()}`;
   }
 }
 

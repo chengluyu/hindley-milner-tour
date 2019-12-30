@@ -17,4 +17,5 @@ const e0 = E.condition(
   E.literal('incorrect'),
 );
 
+console.log('>', e0.toString()); // pretty print the expression
 console.log(e0.evaluate(Map(env))); // should be 'correct'
