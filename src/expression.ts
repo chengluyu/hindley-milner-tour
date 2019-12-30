@@ -4,41 +4,41 @@ export type Value = boolean | number | string | ((value: Value) => Value);
 
 export type Environment = Map<string, Value>;
 
-export class BoundName<S> {
-  public constructor(public readonly name: string, public readonly store: S) {}
-
-  public transform<T>(fn: (s: S) => T): BoundName<T> {
-    return new BoundName<T>(this.name, fn(this.store));
+export abstract class ExpressionVisitor<T = void> {
+  public visit(x: Expression): T {
+    return x.accept(this);
   }
+
+  public abstract visitLiteral(x: Literal): T;
+  public abstract visitVariable(x: Variable): T;
+  public abstract visitAbstraction(x: Abstraction): T;
+  public abstract visitApplication(x: Application): T;
+  public abstract visitCondition(x: Condition): T;
+  public abstract visitLet(x: Let): T;
 }
 
-export abstract class Expression<S> {
-  public constructor(public readonly store: S) {}
-  public abstract transform<T>(fn: (s: S) => T): Expression<T>;
+export abstract class Expression {
   public abstract evaluate(env: Environment): Value;
+  public abstract accept<T>(visitor: ExpressionVisitor<T>): T;
 }
 
-export class Literal<S> extends Expression<S> {
-  public constructor(public readonly store: S, public readonly value: Value) {
-    super(store);
-  }
-
-  public transform<T>(fn: (s: S) => T): Expression<T> {
-    return new Literal<T>(fn(this.store), this.value);
+export class Literal extends Expression {
+  public constructor(public readonly value: Value) {
+    super();
   }
 
   public evaluate(): Value {
     return this.value;
   }
+
+  public accept<T>(visitor: ExpressionVisitor<T>): T {
+    return visitor.visitLiteral(this);
+  }
 }
 
-export class Variable<S> extends Expression<S> {
-  public constructor(public readonly store: S, public readonly name: string) {
-    super(store);
-  }
-
-  public transform<T>(fn: (s: S) => T): Expression<T> {
-    return new Variable<T>(fn(this.store), this.name);
+export class Variable extends Expression {
+  public constructor(public readonly name: string) {
+    super();
   }
 
   public evaluate(env: Environment): Value {
@@ -48,45 +48,29 @@ export class Variable<S> extends Expression<S> {
     }
     return value;
   }
+
+  public accept<T>(visitor: ExpressionVisitor<T>): T {
+    return visitor.visitVariable(this);
+  }
 }
 
-export class Abstraction<S> extends Expression<S> {
-  public constructor(
-    public readonly store: S,
-    public readonly parameter: BoundName<S>,
-    public readonly body: Expression<S>,
-  ) {
-    super(store);
-  }
-
-  public transform<T>(fn: (s: S) => T): Expression<T> {
-    return new Abstraction<T>(
-      fn(this.store),
-      this.parameter.transform(fn),
-      this.body.transform(fn),
-    );
+export class Abstraction extends Expression {
+  public constructor(public readonly parameter: Variable, public readonly body: Expression) {
+    super();
   }
 
   public evaluate(env: Environment): Value {
     return (argument: Value): Value => this.body.evaluate(env.set(this.parameter.name, argument));
   }
+
+  public accept<T>(visitor: ExpressionVisitor<T>): T {
+    return visitor.visitAbstraction(this);
+  }
 }
 
-export class Application<S> extends Expression<S> {
-  public constructor(
-    public readonly store: S,
-    public readonly callee: Expression<S>,
-    public readonly argument: Expression<S>,
-  ) {
-    super(store);
-  }
-
-  public transform<T>(fn: (s: S) => T): Expression<T> {
-    return new Application<T>(
-      fn(this.store),
-      this.callee.transform(fn),
-      this.argument.transform(fn),
-    );
+export class Application extends Expression {
+  public constructor(public readonly callee: Expression, public readonly argument: Expression) {
+    super();
   }
 
   public evaluate(env: Environment): Value {
@@ -96,25 +80,19 @@ export class Application<S> extends Expression<S> {
     }
     throw new Error(`cannot apply a ${typeof callee}`);
   }
+
+  public accept<T>(visitor: ExpressionVisitor<T>): T {
+    return visitor.visitApplication(this);
+  }
 }
 
-export class Condition<S> extends Expression<S> {
+export class Condition extends Expression {
   public constructor(
-    public readonly store: S,
-    public readonly condition: Expression<S>,
-    public readonly consequence: Expression<S>,
-    public readonly alternative: Expression<S>,
+    public readonly condition: Expression,
+    public readonly consequence: Expression,
+    public readonly alternative: Expression,
   ) {
-    super(store);
-  }
-
-  public transform<T>(fn: (s: S) => T): Expression<T> {
-    return new Condition<T>(
-      fn(this.store),
-      this.condition.transform(fn),
-      this.consequence.transform(fn),
-      this.alternative.transform(fn),
-    );
+    super();
   }
 
   public evaluate(env: Environment): Value {
@@ -122,40 +100,45 @@ export class Condition<S> extends Expression<S> {
       ? this.consequence.evaluate(env)
       : this.alternative.evaluate(env);
   }
+
+  public accept<T>(visitor: ExpressionVisitor<T>): T {
+    return visitor.visitCondition(this);
+  }
 }
 
-export class Let<S> extends Expression<S> {
+export class Let extends Expression {
   public constructor(
-    public readonly store: S,
-    public readonly name: BoundName<S>,
-    public readonly value: Expression<S>,
-    public readonly body: Expression<S>,
+    public readonly name: Variable,
+    public readonly value: Expression,
+    public readonly body: Expression,
   ) {
-    super(store);
-  }
-
-  public transform<T>(fn: (s: S) => T): Expression<T> {
-    return new Let<T>(
-      fn(this.store),
-      this.name.transform(fn),
-      this.value.transform(fn),
-      this.body.transform(fn),
-    );
+    super();
   }
 
   public evaluate(env: Environment): Value {
     return this.body.evaluate(env.set(this.name.name, this.value.evaluate(env)));
   }
+
+  public accept<T>(visitor: ExpressionVisitor<T>): T {
+    return visitor.visitLet(this);
+  }
 }
 
-export const literal = (x: Value): Literal<undefined> => new Literal(undefined, x);
-export const variable = (name: string): Variable<undefined> => new Variable(undefined, name);
-export const application = (
-  callee: Expression<undefined>,
-  argument: Expression<undefined>,
-): Application<undefined> => new Application(undefined, callee, argument);
+export const literal = (x: Value): Literal => new Literal(x);
+
+export const variable = (x: string): Variable => new Variable(x);
+
+export const abstraction = (name: string, body: Expression): Abstraction =>
+  new Abstraction(new Variable(name), body);
+
+export const application = (callee: Expression, argument: Expression): Application =>
+  new Application(callee, argument);
+
 export const condition = (
-  condition: Expression<undefined>,
-  consequence: Expression<undefined>,
-  alternative: Expression<undefined>,
-): Condition<undefined> => new Condition(undefined, condition, consequence, alternative);
+  cond: Expression,
+  whenTrue: Expression,
+  whenFalse: Expression,
+): Condition => new Condition(cond, whenTrue, whenFalse);
+
+export const makeLet = (name: string, value: Expression, body: Expression): Let =>
+  new Let(new Variable(name), value, body);
