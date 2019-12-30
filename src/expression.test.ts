@@ -3,31 +3,38 @@ import * as T from './type';
 import { Map } from 'immutable';
 import Annotator from './annotator';
 
+function typed<T extends E.Value>(
+  check: (x: E.Value) => x is T,
+  impl: (x: T) => E.Value,
+): (x: E.Value) => E.Value {
+  return (x: E.Value): E.Value => {
+    if (check(x)) {
+      return impl(x);
+    }
+    throw new Error('type mismatch');
+  };
+}
+
+function isNumber(x: E.Value): x is number {
+  return typeof x === 'number';
+}
+
 const env: { [name: string]: E.Value } = {
   zero: x => x === 0,
-  sin: x => {
-    if (typeof x === 'number') {
-      return Math.sin(x);
-    }
-    throw new Error('"sin" expects its argument to be a number');
-  },
-  add: x => {
-    if (typeof x === 'number') {
-      return (y: E.Value): E.Value => {
-        if (typeof y === 'number') {
-          return x + y;
-        }
-        throw new Error('"sin" expects its argument to be a number');
-      };
-    }
-    throw new Error('"sin" expects its argument to be a number');
-  },
+  sin: typed(isNumber, Math.sin),
+  '+': typed(isNumber, x => typed(isNumber, y => x + y)),
+  '-': typed(isNumber, x => typed(isNumber, y => x - y)),
+  '*': typed(isNumber, x => typed(isNumber, y => x * y)),
+  '/': typed(isNumber, x => typed(isNumber, y => x / y)),
 };
 
 const typeEnv: { [name: string]: T.Type } = {
   zero: new T.FunctionType(T.integerType, T.booleanType),
   sin: new T.FunctionType(T.integerType, T.integerType),
-  add: new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
+  '+': new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
+  '-': new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
+  '*': new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
+  '/': new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
 };
 
 function test(e: E.Expression): void {
@@ -52,7 +59,7 @@ test(
     E.makeLet(
       'y',
       E.literal(1),
-      E.application(E.application(E.variable('add'), E.variable('x')), E.variable('y')),
+      E.application(E.application(E.variable('+'), E.variable('x')), E.variable('y')),
     ),
   ),
 );
