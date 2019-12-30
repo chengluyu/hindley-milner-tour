@@ -20,12 +20,12 @@ export const booleanType = new IntrinsicType('boolean');
 export const stringType = new IntrinsicType('string');
 
 export class TypeVariable implements Type {
-  public constructor(public readonly name: string) {}
+  public constructor(public readonly id: number) {}
   public equalTo(that: Type): boolean {
-    return that instanceof TypeVariable && this.name === that.name;
+    return that instanceof TypeVariable && this.id === that.id;
   }
   public toString(): string {
-    return this.name;
+    return `t${this.id}`;
   }
 }
 
