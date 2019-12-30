@@ -40,8 +40,12 @@ export default class Annotator extends E.ExpressionVisitor<T.Type, [Environment]
     return new T.TypeVariable(this.tick());
   }
 
-  public visitVariable(/* x: E.Variable, env: Environment */): T.Type {
-    return new T.TypeVariable(this.tick());
+  public visitVariable(x: E.Variable, env: Environment): T.Type {
+    const type = env.get(x.name);
+    if (type === undefined) {
+      throw new Error(`unbound variable "${x.name}"`);
+    }
+    return type;
   }
 
   public visitAbstraction(x: E.Abstraction, env: Environment): T.Type {
@@ -64,8 +68,8 @@ export default class Annotator extends E.ExpressionVisitor<T.Type, [Environment]
   }
 
   public visitLet(x: E.Let, env: Environment): T.Type {
-    const varType = this.visit(x.value, env);
-    this.exprTypeVarMap.set(x.name, varType);
-    return this.visit(x.body, env.set(x.name.name, varType));
+    this.exprTypeVarMap.set(x.name, new T.TypeVariable(this.tick()));
+    this.visit(x.body, env.set(x.name.name, this.visit(x.value, env)));
+    return new T.TypeVariable(this.tick());
   }
 }
