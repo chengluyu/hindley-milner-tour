@@ -2,7 +2,7 @@ import * as E from './expression';
 import * as T from './type';
 import { Map } from 'immutable';
 import Annotator from './annotator';
-import Collector from './constraint';
+import Collector from './collector';
 
 function typed<T extends E.Value>(
   check: (x: E.Value) => x is T,
