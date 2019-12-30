@@ -123,7 +123,8 @@ export class Application extends Expression {
   }
 
   public toString(m?: ExpressionAttributeMap<string>): string {
-    return `${this.callee.toString(m)} ${this.argument.toString(m)}`;
+    const repr = `${this.callee.toString(m)} ${this.argument.toString(m)}`;
+    return m ? `[${repr}] :: ${m.get(this)}` : repr;
   }
 }
 
