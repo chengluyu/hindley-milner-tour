@@ -40,7 +40,7 @@ export class FunctionType implements Type {
   }
   public toString(): string {
     return this.argumentType instanceof FunctionType
-      ? `(${this.argumentType.toString()}) -> ${this.argumentType.toString()}`
-      : `${this.argumentType.toString()} -> ${this.argumentType.toString()}`;
+      ? `(${this.argumentType.toString()}) -> ${this.returnType.toString()}`
+      : `${this.argumentType.toString()} -> ${this.returnType.toString()}`;
   }
 }
