@@ -4,22 +4,28 @@ export type Value = boolean | number | string | ((value: Value) => Value);
 
 export type Environment = Map<string, Value>;
 
-export abstract class ExpressionVisitor<T = void> {
-  public visit(x: Expression): T {
-    return x.accept(this);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type HomogeneousArray = Array<any>;
+
+export abstract class ExpressionVisitor<R = void, Args extends HomogeneousArray = []> {
+  public visit(x: Expression, ...args: Args): R {
+    return x.accept(this, ...args);
   }
 
-  public abstract visitLiteral(x: Literal): T;
-  public abstract visitVariable(x: Variable): T;
-  public abstract visitAbstraction(x: Abstraction): T;
-  public abstract visitApplication(x: Application): T;
-  public abstract visitCondition(x: Condition): T;
-  public abstract visitLet(x: Let): T;
+  public abstract visitLiteral(x: Literal, ...args: Args): R;
+  public abstract visitVariable(x: Variable, ...args: Args): R;
+  public abstract visitAbstraction(x: Abstraction, ...args: Args): R;
+  public abstract visitApplication(x: Application, ...args: Args): R;
+  public abstract visitCondition(x: Condition, ...args: Args): R;
+  public abstract visitLet(x: Let, ...args: Args): R;
 }
 
 export abstract class Expression {
   public abstract evaluate(env: Environment): Value;
-  public abstract accept<T>(visitor: ExpressionVisitor<T>): T;
+  public abstract accept<R = void, Args extends HomogeneousArray = []>(
+    visitor: ExpressionVisitor<R, Args>,
+    ...args: Args
+  ): R;
 }
 
 export class Literal extends Expression {
@@ -31,8 +37,11 @@ export class Literal extends Expression {
     return this.value;
   }
 
-  public accept<T>(visitor: ExpressionVisitor<T>): T {
-    return visitor.visitLiteral(this);
+  public accept<R = void, A extends HomogeneousArray = []>(
+    visitor: ExpressionVisitor<R, A>,
+    ...args: A
+  ): R {
+    return visitor.visitLiteral(this, ...args);
   }
 }
 
@@ -49,8 +58,11 @@ export class Variable extends Expression {
     return value;
   }
 
-  public accept<T>(visitor: ExpressionVisitor<T>): T {
-    return visitor.visitVariable(this);
+  public accept<R = void, A extends HomogeneousArray = []>(
+    visitor: ExpressionVisitor<R, A>,
+    ...args: A
+  ): R {
+    return visitor.visitVariable(this, ...args);
   }
 }
 
@@ -63,8 +75,11 @@ export class Abstraction extends Expression {
     return (argument: Value): Value => this.body.evaluate(env.set(this.parameter.name, argument));
   }
 
-  public accept<T>(visitor: ExpressionVisitor<T>): T {
-    return visitor.visitAbstraction(this);
+  public accept<R = void, A extends HomogeneousArray = []>(
+    visitor: ExpressionVisitor<R, A>,
+    ...args: A
+  ): R {
+    return visitor.visitAbstraction(this, ...args);
   }
 }
 
@@ -81,8 +96,11 @@ export class Application extends Expression {
     throw new Error(`cannot apply a ${typeof callee}`);
   }
 
-  public accept<T>(visitor: ExpressionVisitor<T>): T {
-    return visitor.visitApplication(this);
+  public accept<R = void, A extends HomogeneousArray = []>(
+    visitor: ExpressionVisitor<R, A>,
+    ...args: A
+  ): R {
+    return visitor.visitApplication(this, ...args);
   }
 }
 
@@ -101,8 +119,11 @@ export class Condition extends Expression {
       : this.alternative.evaluate(env);
   }
 
-  public accept<T>(visitor: ExpressionVisitor<T>): T {
-    return visitor.visitCondition(this);
+  public accept<R = void, A extends HomogeneousArray = []>(
+    visitor: ExpressionVisitor<R, A>,
+    ...args: A
+  ): R {
+    return visitor.visitCondition(this, ...args);
   }
 }
 
@@ -119,8 +140,11 @@ export class Let extends Expression {
     return this.body.evaluate(env.set(this.name.name, this.value.evaluate(env)));
   }
 
-  public accept<T>(visitor: ExpressionVisitor<T>): T {
-    return visitor.visitLet(this);
+  public accept<R = void, A extends HomogeneousArray = []>(
+    visitor: ExpressionVisitor<R, A>,
+    ...args: A
+  ): R {
+    return visitor.visitLet(this, ...args);
   }
 }
 
