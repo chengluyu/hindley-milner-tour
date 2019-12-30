@@ -4,6 +4,10 @@ export type Value = boolean | number | string | ((value: Value) => Value);
 
 export type Environment = Map<string, Value>;
 
+export interface ExpressionAttributeMap<T> {
+  get(x: Expression): T;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HomogeneousArray = Array<any>;
 
@@ -26,7 +30,7 @@ export abstract class Expression {
     visitor: ExpressionVisitor<R, Args>,
     ...args: Args
   ): R;
-  public abstract toString(): string;
+  public abstract toString(attributeMap?: ExpressionAttributeMap<string>): string;
 }
 
 export class Literal extends Expression {
@@ -45,8 +49,10 @@ export class Literal extends Expression {
     return visitor.visitLiteral(this, ...args);
   }
 
-  public toString(): string {
-    return JSON.stringify(this.value);
+  public toString(attributeMap?: ExpressionAttributeMap<string>): string {
+    return attributeMap
+      ? `[${JSON.stringify(this.value)} :: ${attributeMap.get(this)}]`
+      : JSON.stringify(this.value);
   }
 }
 
@@ -70,8 +76,8 @@ export class Variable extends Expression {
     return visitor.visitVariable(this, ...args);
   }
 
-  public toString(): string {
-    return this.name;
+  public toString(m?: ExpressionAttributeMap<string>): string {
+    return m ? `[${this.name} :: ${m.get(this)}]` : this.name;
   }
 }
 
@@ -91,8 +97,8 @@ export class Abstraction extends Expression {
     return visitor.visitAbstraction(this, ...args);
   }
 
-  public toString(): string {
-    return `λ${this.parameter.name}.${this.body.toString()}`;
+  public toString(m?: ExpressionAttributeMap<string>): string {
+    return `λ${this.parameter.name}.${this.body.toString(m)}`;
   }
 }
 
@@ -116,8 +122,8 @@ export class Application extends Expression {
     return visitor.visitApplication(this, ...args);
   }
 
-  public toString(): string {
-    return `${this.callee.toString()} ${this.argument.toString()}`;
+  public toString(m?: ExpressionAttributeMap<string>): string {
+    return `${this.callee.toString(m)} ${this.argument.toString(m)}`;
   }
 }
 
@@ -143,8 +149,12 @@ export class Condition extends Expression {
     return visitor.visitCondition(this, ...args);
   }
 
-  public toString(): string {
-    return `if ${this.condition.toString()} then ${this.consequence.toString()} else ${this.alternative.toString()}`;
+  public toString(m?: ExpressionAttributeMap<string>): string {
+    const condition = this.condition.toString(m);
+    const consequence = this.consequence.toString(m);
+    const alternative = this.alternative.toString(m);
+    const text = `if ${condition} then ${consequence} else ${alternative}`;
+    return m ? `[${text}] :: ${m.get(this)}` : text;
   }
 }
 
@@ -168,8 +178,12 @@ export class Let extends Expression {
     return visitor.visitLet(this, ...args);
   }
 
-  public toString(): string {
-    return `let ${this.name.name} = ${this.value.toString()} in ${this.body.toString()}`;
+  public toString(m?: ExpressionAttributeMap<string>): string {
+    return m
+      ? `let ${this.name.name}: ${m.get(this.name)} = ${this.value.toString(
+          m,
+        )} in ${this.body.toString(m)}`
+      : `let ${this.name.name} = ${this.value.toString(m)} in ${this.body.toString(m)}`;
   }
 }
 
