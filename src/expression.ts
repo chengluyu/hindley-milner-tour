@@ -180,9 +180,9 @@ export class Let extends Expression {
 
   public toString(m?: ExpressionAttributeMap<string>): string {
     return m
-      ? `let ${this.name.name}: ${m.get(this.name)} = ${this.value.toString(
+      ? `[let ${this.name.name}: ${m.get(this.name)} = ${this.value.toString(
           m,
-        )} in ${this.body.toString(m)}`
+        )} in ${this.body.toString(m)}] :: ${m.get(this)}`
       : `let ${this.name.name} = ${this.value.toString(m)} in ${this.body.toString(m)}`;
   }
 }
