@@ -3,6 +3,8 @@ import * as T from './type';
 import { Map } from 'immutable';
 import Annotator from './annotator';
 import Collector from './collector';
+import unify from './unify';
+import * as S from './substitution';
 
 function typed<T extends E.Value>(
   check: (x: E.Value) => x is T,
@@ -41,10 +43,21 @@ const typeEnv: { [name: string]: T.Type } = {
 function test(e: E.Expression): void {
   const a = new Annotator(Map(typeEnv));
   a.visit(e);
+
+  console.log('The annotated expression:');
+  console.log(e.toString(a));
+
+  console.log('Type constraints:');
   const c = new Collector(a);
   c.visit(e);
   c.display();
-  console.log('>', e.toString(a)); // pretty print the expression
+
+  console.log('Solution set:');
+  const sub = unify(c.getEquations());
+  S.display(sub);
+
+  console.log('The typed expression:');
+  console.log(e.toString({ get: x => S.apply(sub, a.getType(x)).toString() }));
   console.log(e.evaluate(Map(env))); // should be 'correct'
 }
 

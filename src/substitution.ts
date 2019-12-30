@@ -9,8 +9,24 @@ export function singleSubstitution(mapping: [number, T.Type]): Substitution {
 
 export const emptySubstitution: Substitution = Map();
 
-export function compose(s: Substitution, t: Substitution): Substitution {
-  const entries: [number, T.Type][] = [];
-  for (const [id, type] of s) {
-  }
+/**
+ * Apply a substition to a type.
+ * @param sub the substitution to be applied
+ * @param type the type to be substituted
+ */
+export function apply(sub: Substitution, type: T.Type): T.Type {
+  return sub.reduce((target, type, id) => target.substitute(new T.TypeVariable(id), type), type);
+}
+
+/**
+ * Compose two substitution together.
+ * @param left the substitution to be overrided on
+ * @param right the substitution to override
+ */
+export function compose(left: Substitution, right: Substitution): Substitution {
+  return left.map(type => apply(right, type)).merge(right);
+}
+
+export function display(substition: Substitution): void {
+  substition.forEach((type, id) => console.log(`t${id} :: ${type.toString()}`));
 }
