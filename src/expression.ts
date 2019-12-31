@@ -95,7 +95,7 @@ export class Closure {
   public constructor(public readonly abstraction: Abstraction, public readonly env: Environment) {}
 
   public call(x: Value): Value {
-    return this.abstraction.evaluate(this.env.set(this.abstraction.parameter.name, x));
+    return this.abstraction.body.evaluate(this.env.set(this.abstraction.parameter.name, x));
   }
 
   public toString(): string {
