@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "build": "tsc && pegjs -o lib/parser.js src/parser.pegjs",
+    "build": "pegjs src/parser.pegjs && tsc",
     "watch": "tsc --watch"
   },
   "devDependencies": {
