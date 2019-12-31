@@ -120,7 +120,8 @@ export class Abstraction extends Expression {
   }
 
   public toString(m?: ExpressionAttributeMap<string>): string {
-    return `λ${this.parameter.name}.${this.body.toString(m)}`;
+    const text = `λ${this.parameter.name}.${this.body.toString(m)}`;
+    return m ? `[${text}] :: ${m.get(this)}` : text;
   }
 }
 
