@@ -69,8 +69,21 @@ export default class Annotator extends E.ExpressionVisitor<T.Type, [Environment]
   }
 
   public visitLet(x: E.Let, env: Environment): T.Type {
-    this.exprTypeVarMap.set(x.name, new T.TypeVariable(this.tick()));
-    this.visit(x.body, env.set(x.name.name, this.visit(x.value, env)));
+    const nameTypeVar = new T.TypeVariable(this.tick());
+    this.exprTypeVarMap.set(x.name, nameTypeVar);
+    // Since we want to make recursive application possible,
+    // we must inject the declared symbol into the environment before the value
+    // was annotated.
+    this.visit(
+      x.body,
+      env.set(
+        x.name.name,
+        this.visit(
+          x.value,
+          x.value instanceof E.Abstraction ? env.set(x.name.name, nameTypeVar) : env,
+        ),
+      ),
+    );
     return new T.TypeVariable(this.tick());
   }
 }

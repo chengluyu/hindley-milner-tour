@@ -92,7 +92,7 @@ export class Variable extends Expression {
 }
 
 export class Closure {
-  public constructor(public readonly abstraction: Abstraction, public readonly env: Environment) {}
+  public constructor(public readonly abstraction: Abstraction, public env: Environment) {}
 
   public call(x: Value): Value {
     return this.abstraction.body.evaluate(this.env.set(this.abstraction.parameter.name, x));
@@ -195,7 +195,16 @@ export class Let extends Expression {
   }
 
   public evaluate(env: Environment): Value {
-    return this.body.evaluate(env.set(this.name.name, this.value.evaluate(env)));
+    let envOfValue: Environment = env;
+    if (this.value instanceof Abstraction) {
+      // Here is the point: since the function may be recursive,
+      // we should put it into the environment where it will be interpreted.
+      // In this way, the recursive evaluation is possible.
+      const closure = new Closure(this.value, env);
+      envOfValue = envOfValue.set(this.name.name, closure);
+      closure.env = envOfValue;
+    }
+    return this.body.evaluate(env.set(this.name.name, this.value.evaluate(envOfValue)));
   }
 
   public accept<R = void, A extends HomogeneousArray = []>(
