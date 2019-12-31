@@ -27,10 +27,10 @@ export const valueEnv: { [name: string]: E.Value } = {
 };
 
 export const typeEnv: { [name: string]: T.Type } = {
-  zero: new T.FunctionType(T.integerType, T.booleanType),
-  sin: new T.FunctionType(T.integerType, T.integerType),
-  add: new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
-  sub: new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
-  mul: new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
-  div: new T.FunctionType(T.integerType, new T.FunctionType(T.integerType, T.integerType)),
+  zero: T.fn(T.bool, T.int),
+  sin: T.fn(T.int, T.int),
+  add: T.fn(T.int, T.int, T.int),
+  sub: T.fn(T.int, T.int, T.int),
+  mul: T.fn(T.int, T.int, T.int),
+  div: T.fn(T.int, T.int, T.int),
 };

@@ -84,3 +84,17 @@ export class FunctionType extends Type {
     );
   }
 }
+
+// Some shorthands to quickly assemble types.
+
+export const fn = (returnType: Type, ...argumentTypes: Type[]): Type =>
+  argumentTypes.reduceRight(
+    (curriedType, argumentType) => new FunctionType(argumentType, curriedType),
+    returnType,
+  );
+
+export const bool = booleanType;
+
+export const int = integerType;
+
+export const string = stringType;
