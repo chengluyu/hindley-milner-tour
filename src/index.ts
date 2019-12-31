@@ -1,6 +1,7 @@
 import readline from 'readline';
 import { parse } from './parser';
 import Repl from './repl';
+import { valueToString } from './expression';
 
 function main(): void {
   const repl = new Repl();
@@ -19,7 +20,7 @@ function main(): void {
       try {
         const expression = parse(line);
         const [type, value] = repl.evaluate(expression);
-        console.log(`${value} :: ${type.toString()}`);
+        console.log(`${valueToString(value)} :: ${type.toString()}`);
       } catch (e) {
         console.log('Error occurred', e);
       }
