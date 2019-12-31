@@ -40,8 +40,8 @@ Application
     }
 
 Condition
-  = IfKeyword __ condition:Expression
-    ThenKeyword __ consequence:Expression
+  = IfKeyword __ condition:Expression _
+    ThenKeyword __ consequence:Expression _
     ElseKeyword __ alternative:Expression
     { return new T.Condition(condition, consequence, alternative) };
 
