@@ -8,6 +8,8 @@ import unify from './unify';
 import * as builtin from './builtin';
 
 export default class Repl {
+  public verbose = false;
+
   public constructor(
     private valueEnv = Map(builtin.valueEnv),
     private typeEnv = Map(builtin.typeEnv),
@@ -22,6 +24,12 @@ export default class Repl {
     const collector = new Collector(annotator);
     annotator.visit(e);
     collector.visit(e);
+    if (this.verbose) {
+      console.log('Annotated expression:');
+      console.log(e.toString(annotator));
+      console.log('Type equations:');
+      collector.getEquations().forEach(eq => console.log(eq.toString()));
+    }
     return [
       S.apply(unify(collector.getEquations()), annotator.getType(e)),
       e.evaluate(this.valueEnv),

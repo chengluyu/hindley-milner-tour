@@ -34,6 +34,11 @@ function main(): void {
         case 'env':
           repl.env.forEach((type, name) => console.log(`${name}: ${type.toString()}`));
           break;
+        case 'verbose':
+        case 'v':
+          repl.verbose = !repl.verbose;
+          console.log(`Turned ${repl.verbose ? 'on' : 'off'} verbose mode.`);
+          break;
         default:
           console.log(`Unknown command: ${command}`);
           break;
