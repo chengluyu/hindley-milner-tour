@@ -15,8 +15,8 @@ Existing implementations:
 
 ## Memorandum
 
-- [ ] Finish basic infrastructure of the type system
-- [ ] Finish the basic inference algorithm (either constraint-based or substitution-based)
+- [x] Finish basic infrastructure of the type system
+- [x] Finish the basic inference algorithm (either constraint-based or substitution-based)
 - [ ] Implement inference on recursive functions
 - [ ] Implement inference on mutually recursive functions
 - [ ] Make an online REPL single-page application and host it on GitHub pages
