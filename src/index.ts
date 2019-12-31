@@ -1,5 +1,5 @@
 import readline from 'readline';
-import { parse } from './parser';
+import { parse, SyntaxError } from './parser';
 import Repl from './repl';
 import { valueToString } from './expression';
 
@@ -22,7 +22,11 @@ function main(): void {
         const [type, value] = repl.evaluate(expression);
         console.log(`${valueToString(value)} :: ${type.toString()}`);
       } catch (e) {
-        console.log('Error occurred', e);
+        if (e instanceof SyntaxError) {
+          console.log('SyntaxError:', e.message);
+        } else {
+          console.log('TypeError:', e.message);
+        }
       }
     } else {
       const command = matchResult[1];
