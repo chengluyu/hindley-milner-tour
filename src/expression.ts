@@ -1,6 +1,16 @@
 import { Map } from 'immutable';
 
-export type Value = boolean | number | string | ((value: Value) => Value);
+export type Value = boolean | number | string | ((value: Value) => Value) | Closure;
+
+export function valueToString(x: Value): string {
+  if (typeof x === 'function') {
+    return '<built-in function>';
+  }
+  if (typeof x === 'object') {
+    return x.toString();
+  }
+  return x.toString();
+}
 
 export type Environment = Map<string, Value>;
 
@@ -81,13 +91,25 @@ export class Variable extends Expression {
   }
 }
 
+export class Closure {
+  public constructor(public readonly abstraction: Abstraction, public readonly env: Environment) {}
+
+  public call(x: Value): Value {
+    return this.abstraction.body.evaluate(this.env.set(this.abstraction.parameter.name, x));
+  }
+
+  public toString(): string {
+    return `<closure> ${this.abstraction.toString()}`;
+  }
+}
+
 export class Abstraction extends Expression {
   public constructor(public readonly parameter: Variable, public readonly body: Expression) {
     super();
   }
 
   public evaluate(env: Environment): Value {
-    return (argument: Value): Value => this.body.evaluate(env.set(this.parameter.name, argument));
+    return new Closure(this, env);
   }
 
   public accept<R = void, A extends HomogeneousArray = []>(
@@ -98,7 +120,8 @@ export class Abstraction extends Expression {
   }
 
   public toString(m?: ExpressionAttributeMap<string>): string {
-    return `λ${this.parameter.name}.${this.body.toString(m)}`;
+    const text = `λ${this.parameter.name}.${this.body.toString(m)}`;
+    return m ? `[${text}] :: ${m.get(this)}` : text;
   }
 }
 
@@ -111,6 +134,9 @@ export class Application extends Expression {
     const callee = this.callee.evaluate(env);
     if (typeof callee === 'function') {
       return callee(this.argument.evaluate(env));
+    }
+    if (typeof callee === 'object') {
+      return callee.call(this.argument.evaluate(env));
     }
     throw new Error(`cannot apply a ${typeof callee}`);
   }

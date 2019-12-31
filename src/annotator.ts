@@ -51,7 +51,8 @@ export default class Annotator extends E.ExpressionVisitor<T.Type, [Environment]
   public visitAbstraction(x: E.Abstraction, env: Environment): T.Type {
     const parameterType = new T.TypeVariable(this.tick());
     this.exprTypeVarMap.set(x.parameter, parameterType);
-    return this.visit(x.body, env.set(x.parameter.name, new T.TypeVariable(this.tick())));
+    this.visit(x.body, env.set(x.parameter.name, parameterType));
+    return new T.TypeVariable(this.tick());
   }
 
   public visitApplication(x: E.Application, env: Environment): T.Type {
