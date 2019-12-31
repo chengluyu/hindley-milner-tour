@@ -5,10 +5,17 @@ import * as S from './substitution';
 import Annotator from './annotator';
 import Collector from './collector';
 import unify from './unify';
+import * as builtin from './builtin';
 
 export default class Repl {
-  private valueEnv = Map<string, E.Value>();
-  private typeEnv = Map<string, T.Type>();
+  public constructor(
+    private valueEnv = Map(builtin.valueEnv),
+    private typeEnv = Map(builtin.typeEnv),
+  ) {}
+
+  public get env(): Map<string, T.Type> {
+    return this.typeEnv;
+  }
 
   public evaluate(e: E.Expression): [T.Type, E.Value] {
     const annotator = new Annotator(this.typeEnv);
